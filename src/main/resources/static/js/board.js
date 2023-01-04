@@ -1,4 +1,5 @@
 let index = {
+	// 버튼 이벤트리스너 추가는 여기에서
 	init: function(){
 		$("#btn-save").on("click", ()=>{ // function(){}, ()=>{} 
 			this.save();
@@ -8,6 +9,9 @@ let index = {
 		});
 		$("#btn-update").on("click", ()=>{
 			this.update();
+		});
+		$("#btn-reply-save").on("click", ()=>{
+			this.replySave();
 		});
 	},
 	
@@ -64,6 +68,28 @@ let index = {
 		}).fail(function(){
 			alert(JSON.stringify(error));
 		}); 
+	},
+	
+	replySave: function(){
+		let data = {
+			userId: $("#userId").val(),
+			boardId: $("#boardId").val(),
+			content: $("#reply-content").val(),
+		};
+		
+		// console.log(data);
+		$.ajax({
+			type: "POST",
+			url: `/api/board/${data.boardId}/reply`,
+			data: JSON.stringify(data),
+			contentType: "application/json; charset=utf-8",
+			dataType:"json"
+		}).done(function(resp){
+			alert("댓글작성이 완료되었습니다.");
+			location.href = `/board/${data.boardId}`;
+		}).fail(function(){
+			alert(JSON.stringify(error));
+		});
 	},
 }
 

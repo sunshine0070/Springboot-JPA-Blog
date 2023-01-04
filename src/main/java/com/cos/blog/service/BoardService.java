@@ -9,10 +9,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cos.blog.dto.ReplySaveRequestDto;
 import com.cos.blog.model.Board;
+import com.cos.blog.model.Reply;
 import com.cos.blog.model.RoleType;
 import com.cos.blog.model.User;
 import com.cos.blog.repository.BoardRepository;
+import com.cos.blog.repository.ReplyRepository;
 import com.cos.blog.repository.UserRepository;
 
 @Service
@@ -21,6 +24,12 @@ public class BoardService {
 	@Autowired
 	private BoardRepository boardRepository;
 
+	@Autowired
+	private ReplyRepository replyRepository;
+	
+	@Autowired
+	private UserRepository userRepository;
+	
 	@Transactional
 	public void 글쓰기(Board board, User user) { // title, content, user
 		board.setCount(0);
@@ -48,11 +57,34 @@ public class BoardService {
 	@Transactional
 	public void 글수정하기(int id, Board requestBoard) {
 		Board board = boardRepository.findById(id).orElseThrow(() -> {
-			return new IllegalArgumentException("글 상세보기: 아이디를 찾을 수 없습니다.");
+			return new IllegalArgumentException("글수정하기 실패: 아이디를 찾을 수 없습니다.");
 		}); // 영속화 완료
 		board.setTitle(requestBoard.getTitle());
 		board.setContent(requestBoard.getContent());
 		// 해당 함수로 종료시(Service가 종료될 때) 트랜잭션이 종료됩니다.
 		// 이때 더티체킹 - 자동 업데이트가 됌. db flush
+	}
+	
+	@Transactional
+	public void 댓글쓰기(ReplySaveRequestDto replySaveRequestDto) {
+		
+		User user = userRepository.findById(replySaveRequestDto.getUserId()).orElseThrow(() -> {
+			return new IllegalArgumentException("댓글쓰기 실패: 유저 아이디를 찾을 수 없습니다.");
+		}); // 영속화 완료
+		
+		Board board = boardRepository.findById(replySaveRequestDto.getBoardId()).orElseThrow(() -> {
+			return new IllegalArgumentException("댓글쓰기 실패: 게시글 아이디를 찾을 수 없습니다.");
+		}); // 영속화 완료
+		
+		Reply reply = Reply.builder()
+				.user(user)
+				.board(board)
+				.content(replySaveRequestDto.getContent())
+				.build();
+		
+//		requestReply.setUser(user);
+//		requestReply.setBoard(board);
+		
+		replyRepository.save(reply);
 	}
 }
